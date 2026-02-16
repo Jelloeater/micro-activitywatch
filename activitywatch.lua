@@ -35,11 +35,11 @@ function postinit()
 end
 
 function getApiUrl()
-    local url = getSetting("settings", "api_url")
-    if url == nil or url == "" then
-        return defaultApiUrl
+    local envUrl = os.getenv("AW_API_URL")
+    if envUrl ~= nil and envUrl ~= "" then
+        return envUrl
     end
-    return url
+    return defaultApiUrl
 end
 
 function getBucketId()
@@ -47,110 +47,19 @@ function getBucketId()
     return "aw-watcher-micro_" .. hostname
 end
 
-function getConfigFile()
-    return filepath.Join(os2.UserHomeDir(), ".activitywatch.cfg")
-end
-
-function getSetting(section, key)
-    local config_data, err = ioutil.ReadFile(getConfigFile())
-    if err ~= nil then
-        return ""
+function getHostname()
+    local out, err = shell.ExecCommand("hostname")
+    if err == nil and out ~= nil then
+        return string.rtrim(out)
     end
-
-    local lines = util.String(config_data)
-    local currentSection = ""
-
-    for line in lines:gmatch("[^\r\n]+") do
-        line = string.rtrim(line)
-        if string.starts(line, "[") and string.ends(line, "]") then
-            currentSection = string.lower(string.sub(line, 2, string.len(line) -1))
-        elseif currentSection == section then
-            local parts = string.split(line, "=")
-            local currentKey = string.trim(parts[1])
-            if currentKey == key then
-                return string.trim(parts[2])
-            end
-        end
-    end
-
-    return ""
-end
-
-function setSetting(section, key, value)
-    local config_data, err = ioutil.ReadFile(getConfigFile())
-    local errStr = err and tostring(err) or nil
-    if errStr ~= nil and string.find(errStr, "no such file") == nil then
-        micro.InfoBar():Message("failed reading ~/.activitywatch.cfg")
-        micro.Log("failed reading ~/.activitywatch.cfg")
-        micro.Log(errStr)
-        return
-    end
-
-    local contents = {}
-    local currentSection = ""
-    local lines = ""
-    local found = false
-
-    if config_data ~= nil and config_data ~= "" then
-        lines = util.String(config_data)
-    end
-
-    for line in lines:gmatch("[^\r\n]+") do
-        line = string.rtrim(line)
-        if string.starts(line, "[") and string.ends(line, "]") then
-            if currentSection == section and not found then
-                table.insert(contents, key .. " = " .. value)
-                found = true
-            end
-
-            currentSection = string.lower(string.sub(line, 2, string.len(line) -1))
-            table.insert(contents, string.rtrim(line))
-        elseif currentSection == section then
-            local parts = string.split(line, "=")
-            local currentKey = string.trim(parts[1])
-            if currentKey == key then
-                if not found then
-                    table.insert(contents, key .. " = " .. value)
-                    found = true
-                end
-            else
-                table.insert(contents, string.rtrim(line))
-            end
-        else
-            table.insert(contents, string.rtrim(line))
-        end
-    end
-
-    if not found then
-        if currentSection ~= section then
-            table.insert(contents, "[" .. section .. "]")
-        end
-
-        table.insert(contents, key .. " = " .. value)
-    end
-
-    _, err = ioutil.WriteFile(getConfigFile(), table.concat(contents, "\n"), 0600)
-    if err ~= nil then
-        micro.InfoBar():Message("failed saving ~/.activitywatch.cfg")
-        micro.Log("failed saving ~/.activitywatch.cfg")
-        micro.Log(err)
-        return
-    end
+    return "unknown"
 end
 
 function getHostname()
-    local hostname = getSetting("internal", "hostname")
-    if hostname ~= nil and hostname ~= "" then
-        return hostname
-    end
-
     local out, err = shell.ExecCommand("hostname")
     if err == nil and out ~= nil then
-        hostname = string.rtrim(out)
-        setSetting("internal", "hostname", hostname)
-        return hostname
+        return string.rtrim(out)
     end
-
     return "unknown"
 end
 
@@ -226,15 +135,7 @@ function showStatus(bp)
 end
 
 function promptForApiUrl(bp)
-    micro.InfoBar():Prompt("API URL: ", getApiUrl(), "api_url", function(input)
-    end, function(input, canceled)
-        if not canceled then
-            if input ~= nil and input ~= "" then
-                setSetting("settings", "api_url", input)
-                micro.InfoBar():Message("ActivityWatch API URL set to: " .. input)
-            end
-        end
-    end)
+    micro.InfoBar():Message("ActivityWatch API URL: " .. getApiUrl() .. " (set AW_API_URL env var to override)")
 end
 
 function getLanguageFromPath(filePath)
