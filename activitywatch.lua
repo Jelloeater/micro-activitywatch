@@ -77,10 +77,11 @@ end
 
 function setSetting(section, key, value)
     local config_data, err = ioutil.ReadFile(getConfigFile())
-    if err ~= nil and string.find(err, "no such file") == nil then
+    local errStr = err and tostring(err) or nil
+    if errStr ~= nil and string.find(errStr, "no such file") == nil then
         micro.InfoBar():Message("failed reading ~/.activitywatch.cfg")
         micro.Log("failed reading ~/.activitywatch.cfg")
-        micro.Log(err)
+        micro.Log(errStr)
         return
     end
 
