@@ -43,7 +43,7 @@ end
 
 function getBucketId()
     local hostname = getHostname()
-    return "micro-editor-" .. hostname
+    return "aw-watcher-micro_" .. hostname
 end
 
 function getConfigFile()
@@ -161,7 +161,7 @@ function ensureBucketExists()
     local apiUrl = getApiUrl()
     local createUrl = apiUrl .. "/buckets/" .. bucketId
 
-    local bucketData = [[{"client": "micro-activitywatch", "hostname": "]] .. getHostname() .. [[", "type": "app.editor.activity", "data": {}}]]
+    local bucketData = [[{"client": "aw-watcher-micro", "hostname": "]] .. getHostname() .. [[", "type": "app.editor.activity", "data": {}}]]
 
     local res, err = http.Post(createUrl, "application/json", bucketData)
 
