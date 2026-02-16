@@ -315,23 +315,20 @@ end
 function sendHeartbeat(filePath, isWrite)
     local apiUrl = getApiUrl()
     local bucketId = getBucketId()
-    local heartbeatUrl = apiUrl .. "/buckets/" .. bucketId .. "/heartbeat"
+    local heartbeatUrl = apiUrl .. "/buckets/" .. bucketId .. "/heartbeat?pulsetime=120"
 
-    local data = {
-        data = {
-            file = filePath,
-            language = getLanguageFromPath(filePath),
-            project = getProjectFromPath(filePath),
-            isWrite = isWrite
-        }
-    }
+    local file = string.gsub(filePath, '\\', '\\\\')
+    file = string.gsub(file, '"', '\\"')
+    local lang = getLanguageFromPath(filePath)
+    local proj = getProjectFromPath(filePath)
+    proj = string.gsub(proj, '\\', '\\\\')
+    proj = string.gsub(proj, '"', '\\"')
 
-    local jsonBody = [[{"data":]] .. "{"
-    jsonBody = jsonBody .. [[ "file": "]] .. filePath .. [[", ]]
-    jsonBody = jsonBody .. [[ "language": "]] .. getLanguageFromPath(filePath) .. [[", ]]
-    jsonBody = jsonBody .. [[ "project": "]] .. getProjectFromPath(filePath) .. [[", ]]
-    jsonBody = jsonBody .. [[ "isWrite": ]] .. (isWrite and "true" or "false")
-    jsonBody = jsonBody .. "}}"
+    local timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    local jsonBody = string.format(
+        '{"timestamp": "%s", "data": {"file": "%s", "language": "%s", "project": "%s", "isWrite": %s}}',
+        timestamp, file, lang, proj, isWrite and "true" or "false"
+    )
 
     local res, err = http.Post(heartbeatUrl, "application/json", jsonBody)
 
@@ -353,6 +350,9 @@ function enoughTimePassed(time)
 end
 
 function onEvent(filePath, isWrite)
+    if not bucketCreated then
+        ensureBucketExists()
+    end
     local time = os.time() * 1000
     if isWrite or enoughTimePassed(time) or lastFile ~= filePath then
         sendHeartbeat(filePath, isWrite)
