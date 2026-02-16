@@ -9,7 +9,7 @@ local http = import("http")
 local ioutil = import("io/ioutil")
 local os2 = import("os")
 local runtime = import("runtime")
-local bytes = import("bytes")
+local strings = import("strings")
 
 local userAgent = "micro/" .. util.SemVersion:String() .. " micro-activitywatch/" .. VERSION
 local defaultApiUrl = "http://localhost:5600/api/0"
@@ -165,7 +165,7 @@ function ensureBucketExists()
 
     local bucketData = [[{"client": "aw-watcher-micro", "hostname": "]] .. getHostname() .. [[", "type": "app.editor.activity", "data": {}}]]
 
-    local res, err = http.Post(createUrl, "application/json", bytes.NewReader(bucketData))
+    local res, err = http.Post(createUrl, "application/json", strings.NewReader(bucketData))
 
     if err ~= nil then
         micro.Log("ActivityWatch: Failed to create bucket - " .. err)
@@ -332,7 +332,7 @@ function sendHeartbeat(filePath, isWrite)
         timestamp, file, lang, proj, isWrite and "true" or "false"
     )
 
-    local res, err = http.Post(heartbeatUrl, "application/json", bytes.NewReader(jsonBody))
+    local res, err = http.Post(heartbeatUrl, "application/json", strings.NewReader(jsonBody))
 
     if err ~= nil then
         micro.Log("ActivityWatch: Failed to send heartbeat - " .. err)
