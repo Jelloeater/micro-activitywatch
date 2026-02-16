@@ -16,6 +16,8 @@ local defaultApiUrl = "http://localhost:5600/api/0"
 local lastFile = ""
 local lastHeartbeat = 0
 local bucketCreated = false
+local currentFile = nil
+local heartbeatTimer = nil
 
 function init()
     config.MakeCommand("activitywatch.apiurl", promptForApiUrl, config.NoComplete)
@@ -27,11 +29,22 @@ function init()
     micro.Log("Initializing ActivityWatch v" .. VERSION)
 
     ensureBucketExists()
+    startHeartbeatTimer()
 end
 
 function postinit()
     micro.InfoBar():Message("ActivityWatch initialized")
     micro.Log("ActivityWatch initialized")
+end
+
+function startHeartbeatTimer()
+    local time = import("time")
+    heartbeatTimer = micro.After(time.Second * 30, function()
+        if currentFile ~= nil and currentFile ~= "" then
+            sendHeartbeat(currentFile, false)
+        end
+        startHeartbeatTimer()
+    end)
 end
 
 function getApiUrl()
@@ -207,12 +220,22 @@ function getProjectFromPath(filePath)
         local gitPath = filepath.Join(path, ".git")
         local _, err = os2.Stat(gitPath)
         if err == nil then
-            return filepath.Base(path)
+            return path
         end
         return hasGitDir(filepath.Dir(path))
     end
 
-    return hasGitDir(dir) or "unknown"
+    local project = hasGitDir(dir)
+    if project ~= nil then
+        return project
+    end
+    
+    -- Fallback to directory name if no git repo found
+    if dir ~= "" and dir ~= home then
+        return filepath.Base(dir)
+    end
+    
+    return "unknown"
 end
 
 function sendHeartbeat(filePath, isWrite)
@@ -253,6 +276,7 @@ function enoughTimePassed(time)
 end
 
 function onEvent(filePath, isWrite)
+    currentFile = filePath
     if not bucketCreated then
         ensureBucketExists()
     end
