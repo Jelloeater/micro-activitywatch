@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Lua
+        uses: leafo/gh-actions-lua@v9
+        with:
+          lua-version: "5.4"
+
+      - name: Install luacheck
+        run: luarocks install luacheck
+
+      - name: Lint Lua files
+        run: |
+          luacheck activitywatch.lua wakatime.lua --no-color --codes
+
+  test-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON
+        run: python3 -c "import json; json.load(open('repo.json'))"
+
+      - name: Validate repo.json structure
+        run: |
+          python3 << 'EOF'
+import json
+with open('repo.json') as f:
+    data = json.load(f)
+    for plugin in data:
+        assert 'Name' in plugin
+        assert 'Description' in plugin
+        assert 'Website' in plugin
+        assert 'Versions' in plugin
+        for version in plugin['Versions']:
+            assert 'Version' in version
+            assert 'Url' in version
+            assert 'Require' in version
+print("All validations passed!")
+EOF

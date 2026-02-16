@@ -28,7 +28,7 @@ For the first time you install WakaTime in your machine the Micro startup could 
 
 1. Enter your [api key](https://wakatime.com/api-key), then hit `Enter`.
 
-   > (If you’re not prompted, press ctrl + e then type `wakatime.apikey`.)
+   > (If you're not prompted, press ctrl + e then type `wakatime.apikey`.)
 
 2. Use Micro Editor and your coding activity will be displayed on your [WakaTime dashboard](https://wakatime.com).
 
@@ -62,3 +62,62 @@ For more general troubleshooting info, see the [wakatime-cli Troubleshooting Sec
 [wakatime-cli-help]: https://github.com/wakatime/wakatime#troubleshooting
 [how to debug]: https://wakatime.com/faq#debug-plugins
 [plugins status page]: https://wakatime.com/plugin-status
+
+---
+
+# ActivityWatch for Micro Editor
+
+Time tracking plugin using [ActivityWatch](https://activitywatch.net/) - an open source, privacy-focused alternative to WakaTime.
+
+## Installation
+
+Using the plugin manager:
+
+```shell
+micro -plugin install activitywatch
+```
+
+Or from within micro:
+
+```shell
+> plugin install activitywatch
+```
+
+Or manually install by cloning this repo as `activitywatch` into your `plug` directory:
+
+```shell
+git clone https://github.com/Jelloeater/micro-activitywatch ~/.config/micro/plug/activitywatch
+```
+
+## Requirements
+
+- [ActivityWatch](https://activitywatch.net/) running (default: `http://localhost:5600`)
+- Micro editor v2.0.0+
+
+## Usage
+
+The plugin will automatically create a bucket named `micro-editor-{hostname}` and send heartbeats when you:
+- Save files
+- Move the cursor
+- Select text
+- Scroll
+- And more...
+
+### Commands
+
+- `activitywatch.status` - Show connection status
+- `activitywatch.test` - Test connection to ActivityWatch
+- `activitywatch.apiurl` - Configure API URL (default: `http://localhost:5600/api/0`)
+
+## Configuration
+
+Configuration is stored in `~/.activitywatch.cfg`:
+- `api_url` - ActivityWatch API endpoint (default: `http://localhost:5600/api/0`)
+
+## Data Collected
+
+The plugin sends the following data to ActivityWatch:
+- File path being edited
+- File extension (language detection)
+- Project name (detected from `.git` folder)
+- Whether the file was written to (save action)

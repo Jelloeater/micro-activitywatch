@@ -54,4 +54,20 @@
         }
       }
     ]
-}]
+  },
+  {
+    "Name": "activitywatch",
+    "Description": "Time tracking for the Micro editor using ActivityWatch - open source, privacy-focused alternative to WakaTime",
+    "Website": "https://github.com/ActivityWatch/activitywatch",
+    "Tags": ["productivity", "time tracking", "activitywatch", "timer"],
+    "Versions": [
+      {
+        "Version": "1.0.0",
+        "Url": "https://github.com/Jelloeater/micro-activitywatch/archive/v1.0.0.zip",
+        "Require": {
+          "micro": ">=2.0.0"
+        }
+      }
+    ]
+  }
+]
